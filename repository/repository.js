@@ -8,10 +8,16 @@ const config = require("configuration/config.js");
  */
 class Repository {
   constructor() {
-    this.host = "test";
+    this.host = "";
     this.bucketName = "";
     this.username = "";
     this.password = "";
+
+    this.counterIds = {
+      customer: "cbdd-customer-counter",
+      user: "cbdd-user-counter",
+      order: "cbdd-order-counter",
+    };
 
     this.cluster = null;
     this.bucket = null;
@@ -40,26 +46,9 @@ class Repository {
       this.bucket = await this.cluster.bucket(this.bucketName);
       this.collection = await this.bucket.defaultCollection();
 
-      /* 
-      
-      TODO:  this will throw an error when not connected
-
-      (node:48671) UnhandledPromiseRejectionWarning: Error: unexpected error on non-final callback
-    at /Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/httpexecutor.js:70:17
-    at Array.<anonymous> (/Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/connection.js:173:25)
-    at Connection._flushPendOps (/Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/connection.js:142:23)
-    at Connection.close (/Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/connection.js:210:10)
-    at /Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/cluster.js:502:14
-(node:48671) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
-(node:48671) [DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
-      */
-      let connectedBucket = await this.cluster
-        .buckets()
-        .getBucket(this.bucketName);
-      console.log(connectedBucket);
-      if (connectedBucket) {
+      if (this.bucket.name) {
         outputMessage(
-          connectedBucket.name,
+          this.bucket.name,
           "repository.js:connect() - connected to bucket:"
         );
       } else {
@@ -73,22 +62,13 @@ class Repository {
     }
   }
 
-  async ping(services) {
+  async ping() {
     try {
-      /*
-      TODO:  figure out when diagnostics will be available
-      let couchbaseServices = [];
-      services.forEach((service) => {
-        if (service == "KeyValue") {
-          couchbaseServices.push(couchbase.ServiceType.KeyValue);
-        } else if (service == "Query") {
-          couchbaseServices.push(couchbase.ServiceType.Query);
-        } else if (service == "Search") {
-          couchbaseServices.push(couchbase.ServiceType.Search);
-        }
-      });*/
-      let result = await this.cluster.diagnostics();
-      return { diagnostics: result, error: null };
+      let result = await this.getObjectByKey("customer_0");
+      return {
+        result: result != null ? "Connected to Couchbase server." : null,
+        error: null,
+      };
     } catch (err) {
       outputMessage(
         err,
@@ -250,7 +230,7 @@ class Repository {
         "basic-search",
         couchbase.SearchQuery.term(product).fuzziness(fuzziness),
         {
-          limit: 500,
+          limit: 100,
         }
       );
 
@@ -299,11 +279,11 @@ class Repository {
        *
        */
 
-      let lastOrderId = await this.getLastOrderId();
-      let key = `order_${lastOrderId + 1}`;
+      let orderId = await this.getNextOrderId();
+      let key = `order_${orderId}`;
 
       order._id = key;
-      order.orderId = lastOrderId + 1;
+      order.orderId = orderId;
       order.doc.created = Math.floor(new Date() / 1000);
       order.doc.createdBy = order.custId;
 
@@ -526,14 +506,18 @@ class Repository {
    * Helper methods:
    *    getNewCustomerDocument()
    *    getNewUserDocument()
-   *    getLastOrderId()
-   *    getLastCustomerId()
-   *    getLastUserId()
+   *    getNextOrderId()
+   *    getNextCustomerId()
+   *    getNextUserId()
    */
 
   async getNewCustomerDocument(userInfo) {
-    let custId = await this.getLastCustomerId();
-    let key = `customer_${custId + 1}`;
+    let custId = await this.getNextCustomerId();
+    if (!custId) {
+      throw "Unable to get next customer id.";
+    }
+
+    let key = `customer_${custId}`;
     let date = new Date();
     let createDateTimeStamp = Math.floor(date / 1000);
     let currentDay = `${date.getFullYear()}-${
@@ -548,7 +532,7 @@ class Repository {
         createdBy: 1234,
       },
       _id: key,
-      custId: custId + 1,
+      custId: custId,
       custName: {
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
@@ -585,61 +569,41 @@ class Repository {
   }
 
   async getNewUserDocument(userInfo) {
-    let userId = await this.getLastUserId();
-    let key = `user_${userId + 1}`;
+    let userId = await this.getNextUserId();
+    if (!userId) {
+      throw "Unable to get next user id.";
+    }
+
+    let key = `user_${userId}`;
 
     return {
       docType: "user",
       _id: key,
-      userId: userId + 1,
+      userId: userId,
       username: userInfo.username,
       password: userInfo.password,
     };
   }
 
-  async getLastOrderId() {
-    let n1qlQuery = `
-      SELECT o.orderId 
-      FROM \`${this.bucketName}\` o 
-      WHERE o.doc.type='order' 
-      ORDER BY o.orderId DESC 
-      LIMIT 1;`;
-
-    let result = await this.cluster.query(n1qlQuery);
-    if (result.rows && result.rows.length > 0) {
-      return parseInt(result.rows[0].orderId);
-    }
-    return 0;
+  async getNextCustomerId() {
+    let result = await this.collection
+      .binary()
+      .increment(this.counterIds["customer"], 1, { initial: 1000 });
+    return result && result.value ? result.value : null;
   }
 
-  async getLastCustomerId() {
-    let n1qlQuery = `
-      SELECT c.custId 
-      FROM \`${this.bucketName}\` c 
-      WHERE c.doc.type='customer' 
-      ORDER BY c.custId DESC 
-      LIMIT 1;`;
-
-    let result = await this.cluster.query(n1qlQuery);
-    if (result.rows && result.rows.length > 0) {
-      return parseInt(result.rows[0].custId);
-    }
-    return 0;
+  async getNextUserId() {
+    let result = await this.collection
+      .binary()
+      .increment(this.counterIds["user"], 1, { initial: 1000 });
+    return result && result.value ? result.value : null;
   }
 
-  async getLastUserId() {
-    let n1qlQuery = `
-      SELECT u.userId 
-      FROM \`${this.bucketName}\` u 
-      WHERE u.docType='user' 
-      ORDER BY u.userId DESC 
-      LIMIT 1;`;
-
-    let result = await this.cluster.query(n1qlQuery);
-    if (result.rows && result.rows.length > 0) {
-      return parseInt(result.rows[0].userId);
-    }
-    return 0;
+  async getNextOrderId() {
+    let result = await this.collection
+      .binary()
+      .increment(this.counterIds["order"], 1, { initial: 5000 });
+    return result && result.value ? result.value : null;
   }
 
   async getObjectByKey(key) {
@@ -649,7 +613,7 @@ class Repository {
     } catch (err) {
       outputMessage(
         err,
-        "repository.js:getLastUserId() - error finding the latest userId."
+        "repository.js:getObjectByKey() - error retrieving document: " + key
       );
       return {
         result: null,

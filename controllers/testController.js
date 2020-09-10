@@ -18,14 +18,6 @@ const db = require("repository/repository");
  *       - application/json
  *     produces:
  *       - application/json
- *     parameters:
- *       - in: query
- *         name: services
- *         description: The Couchbase services (KeyValue, Query, Search) to check on
- *         schema:
- *           type: array
- *           items:
- *             type: string
  *     responses:
  *       200:
  *         description: status of specified services
@@ -47,14 +39,6 @@ router.get("/ping", ping);
  *       - application/json
  *     produces:
  *       - application/json
- *     parameters:
- *       - in: query
- *         name: services
- *         description: The Couchbase services (KeyValue, Query, Search) to check on
- *         schema:
- *           type: array
- *           items:
- *             type: string
  *     responses:
  *       200:
  *         description: success
@@ -99,27 +83,21 @@ module.exports = router;
 
 async function ping(req, res) {
   try {
-    let services = [];
-    if (!(req.query.services && req.query.services.length > 0)) {
-      services = ["KeyValue", "Query", "Search"];
-    } else if (!Array.isArray(req.query.services)) {
-      services.push(req.query.services);
-    }
 
     let response = new Response(null, "Operation not built yet.", null, null);
-    let result = await db.ping(services);
+    let resp = await db.ping();
 
-    if (result.error) {
+    if (resp.error) {
       response.message = "Error trying to ping database.";
-      response.error = result.error;
+      response.error = resp.error;
       return res.status(500).send(response);
     }
     
-    if(result == "NOP"){
+    if(resp == "NOP"){
       return res.status(200).send(response);
     }
 
-    response.data = result.diagnostics;
+    response.data = resp.result;
     response.message = "Successfully pinged database.";
     res.status(200).send(response);
   } catch (err) {
@@ -142,27 +120,20 @@ async function authorizedPing(req, res) {
       return res.status(500).send(req.jwt.sessionRes);
     }
 
-    let services = [];
-    if (!(req.query.services && req.query.services.length > 0)) {
-      services = ["KeyValue", "Query", "Search"];
-    } else if (!Array.isArray(req.query.services)) {
-      services.push(req.query.services);
-    }
-
     let response = new Response(null, "Operation not built yet.", null, null);
-    let result = await db.ping(services);
+    let resp = await db.ping();
     
-    if (result.error) {
+    if (resp.error) {
       response.message = "Error trying to ping database.";
       response.error = err;
       return res.status(500).send(response);
     }
     
-    if(result == "NOP"){
+    if(resp == "NOP"){
       return res.status(200).send(response);
     }
 
-    response.data = result;
+    response.data = resp.result;
     response.message = "Successfully pinged database.";
     res.status(200).send(response);
   } catch (err) {

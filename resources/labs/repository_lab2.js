@@ -3,21 +3,32 @@ const outputMessage = require("library/outputMessage");
 const { v4: uuidv4 } = require("uuid");
 const config = require("configuration/config.js");
 
-
 /**
  * Class representing a single instance of a Couchbase client.
  */
 class Repository {
   constructor() {
-    this.host = "test";
+    this.host = "";
     this.bucketName = "";
     this.username = "";
     this.password = "";
 
+    this.counterIds = {
+      customer: "cbdd-customer-counter",
+      user: "cbdd-user-counter",
+      order: "cbdd-order-counter",
+    };
+
     this.cluster = null;
     this.bucket = null;
     this.collection = null;
-    let { host, secure, bucket, username, password } = global.configuration.database;
+    let {
+      host,
+      secure,
+      bucket,
+      username,
+      password,
+    } = global.configuration.database;
     this.connect(host, secure, bucket, username, password);
   }
 
@@ -35,30 +46,13 @@ class Repository {
       this.bucket = await this.cluster.bucket(this.bucketName);
       this.collection = await this.bucket.defaultCollection();
 
-      /* 
-      
-      TODO:  this will throw an error when not connected
-
-      (node:48671) UnhandledPromiseRejectionWarning: Error: unexpected error on non-final callback
-    at /Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/httpexecutor.js:70:17
-    at Array.<anonymous> (/Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/connection.js:173:25)
-    at Connection._flushPendOps (/Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/connection.js:142:23)
-    at Connection.close (/Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/connection.js:210:10)
-    at /Users/jaredcasey/GIT/couchbase/demos/cb-dev-days/node-30-api/node_modules/couchbase/lib/cluster.js:502:14
-(node:48671) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
-(node:48671) [DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code.
-      */
-      let connectedBucket = await this.cluster.buckets().getBucket(this.bucketName);
-      console.log(connectedBucket);
-      if(connectedBucket){
+      if (this.bucket.name) {
         outputMessage(
-          connectedBucket.name,
+          this.bucket.name,
           "repository.js:connect() - connected to bucket:"
         );
-      }else{
-        outputMessage(
-          "repository.js:connect() - error connecting to bucket."
-        );
+      } else {
+        outputMessage("repository.js:connect() - error connecting to bucket.");
       }
     } catch (err) {
       outputMessage(
@@ -68,28 +62,19 @@ class Repository {
     }
   }
 
-  async ping(services) {
-    try{
-      /*
-      TODO:  figure out when diagnostics will be available
-      let couchbaseServices = [];
-      services.forEach((service) => {
-        if (service == "KeyValue") {
-          couchbaseServices.push(couchbase.ServiceType.KeyValue);
-        } else if (service == "Query") {
-          couchbaseServices.push(couchbase.ServiceType.Query);
-        } else if (service == "Search") {
-          couchbaseServices.push(couchbase.ServiceType.Search);
-        }
-      });*/
-      let result = await this.cluster.diagnostics()
-      return {diagnostics: result, error: null};
-    }catch(err){
+  async ping() {
+    try {
+      let result = await this.getObjectByKey("customer_0");
+      return {
+        result: result != null ? "Connected to Couchbase server." : null,
+        error: null,
+      };
+    } catch (err) {
       outputMessage(
         err,
         "repository.js:ping() - error trying to retrieve diagnostics."
       );
-      return {diagnostics: null, error: err};
+      return { diagnostics: null, error: err };
     }
   }
 
@@ -97,7 +82,10 @@ class Repository {
     try {
       let customerDoc = await this.getNewCustomerDocument(userInfo);
 
-      let savedCustomer = await this.collection.insert(customerDoc._id, customerDoc);
+      let savedCustomer = await this.collection.insert(
+        customerDoc._id,
+        customerDoc
+      );
 
       if (!savedCustomer) {
         return { result: null, error: null };
@@ -140,7 +128,7 @@ class Repository {
         LIMIT 1;`;
 
       let options = {
-        parameters: [username]
+        parameters: [username],
       };
 
       //TODO:  prepared queries
@@ -149,24 +137,20 @@ class Repository {
       // }
 
       let qResult = await this.cluster.query(n1qlQuery, options);
-      if(!qResult.rows || qResult.rows.length == 0){
-        return {userInfo: null, error: null};
+      if (!qResult.rows || qResult.rows.length == 0) {
+        return { userInfo: null, error: null };
       }
 
       let user = qResult.rows[0];
-      return {userInfo: user, error: null};
+      return { userInfo: user, error: null };
     } catch (err) {
-      outputMessage(
-        err,
-        "repository.js:getUser() - error retrieving user."
-      );
+      outputMessage(err, "repository.js:getUser() - error retrieving user.");
       return { userInfo: null, error: err };
     }
   }
 
   async createSession(username, expiry) {
     try {
-      
       let session = {
         sessionId: uuidv4(),
         username: username,
@@ -174,9 +158,10 @@ class Repository {
       };
 
       let sessionKey = `session::${session.sessionId}`;
-      let result = await this.collection.insert(sessionKey, session, {expiry: expiry});
-      return {session: result ? session : null, error: null};
-
+      let result = await this.collection.insert(sessionKey, session, {
+        expiry: expiry,
+      });
+      return { session: result ? session : null, error: null };
     } catch (err) {
       outputMessage(
         err,
@@ -190,7 +175,7 @@ class Repository {
     try {
       let sessionKey = `session::${sessionId}`;
       let result = await this.collection.getAndTouch(sessionKey, expiry);
-      return {session: result ? result.value : null, error: null};
+      return { session: result ? result.value : null, error: null };
     } catch (err) {
       outputMessage(
         err,
@@ -204,7 +189,7 @@ class Repository {
     try {
       let sessionKey = `session::${sessionId}`;
       let kvResult = await this.collection.remove(sessionKey);
-      return {result: kvResult ? kvResult : null, error: null};
+      return { result: kvResult ? kvResult : null, error: null };
     } catch (err) {
       outputMessage(
         err,
@@ -214,8 +199,8 @@ class Repository {
     }
   }
 
-  async getCustomer(customerId){
-    try{
+  async getCustomer(customerId) {
+    try {
       /**
        * Lab 1:  K/V operation - Get
        *  1.  Get customer:  bucket.get(key)
@@ -223,15 +208,15 @@ class Repository {
       let result = await this.collection.get(customerId);
       console.log(result);
       return { customer: result ? result.value : null, error: null };
-    }catch(err){
+    } catch (err) {
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:getCustomer() - error:");
       return { session: null, error: err };
     }
   }
 
-  async searchProducts(product, fuzziness){
-    try{
+  async searchProducts(product, fuzziness) {
+    try {
       /**
        * Lab 2:  Search operation (FTS)
        *  1.  FTS:
@@ -248,8 +233,8 @@ class Repository {
     }
   }
 
-  async getOrder(orderId){
-    try{
+  async getOrder(orderId) {
+    try {
       /**
        * Lab 3:  K/V operation(s):
        *  1.  get order:  bucket.get(key)
@@ -263,8 +248,8 @@ class Repository {
     }
   }
 
-  async saveOrder(order){
-    try{
+  async saveOrder(order) {
+    try {
       /**
        * Lab 3:  K/V operation(s):
        *  1.  generate key:  order_<orderId>
@@ -280,8 +265,8 @@ class Repository {
     }
   }
 
-  async replaceOrder(order){
-    try{
+  async replaceOrder(order) {
+    try {
       /**
        * Lab 3:  K/V operation(s):
        *  1.  generate key:  order_<orderId>
@@ -296,8 +281,8 @@ class Repository {
     }
   }
 
-  async deleteOrder(orderId){
-    try{
+  async deleteOrder(orderId) {
+    try {
       /**
        * Lab 3:  K/V operation(s):
        *  1.  delete order:  bucket.remove(key)
@@ -311,17 +296,17 @@ class Repository {
     }
   }
 
-  async getOrders(customerId){
-    try{
+  async getOrders(customerId) {
+    try {
       /**
        * Lab 4:  N1QL operations
        *  1. Get orders for customerId
        *     - WHERE order.orderStatus != 'created'
        *     - Document properties needed (more can be provided):
-       *         id, 
-       *         orderStatus, 
-       *         shippingInfo.name aliased as shippedTo, 
-       *         grandTotal, 
+       *         id,
+       *         orderStatus,
+       *         shippingInfo.name aliased as shippedTo,
+       *         grandTotal,
        *         lineItems,
        *         orderDate (hint use MILLIS_TO_STR())
        *
@@ -334,8 +319,8 @@ class Repository {
     }
   }
 
-  async getNewOrder(customerId){
-    try{
+  async getNewOrder(customerId) {
+    try {
       /**
        * Lab 4:  N1QL operations
        *  1. Get latest order for customerId
@@ -398,16 +383,20 @@ class Repository {
    * Helper methods:
    *    getNewCustomerDocument()
    *    getNewUserDocument()
-   *    getLastOrderId()
-   *    getLastCustomerId()
-   *    getLastUserId()
+   *    getNextOrderId()
+   *    getNextCustomerId()
+   *    getNextUserId()
    */
 
   
 
   async getNewCustomerDocument(userInfo) {
-    let custId = await this.getLastCustomerId();
-    let key = `customer_${custId + 1}`;
+    let custId = await this.getNextCustomerId();
+    if (!custId) {
+      throw "Unable to get next customer id.";
+    }
+
+    let key = `customer_${custId}`;
     let date = new Date();
     let createDateTimeStamp = Math.floor(date / 1000);
     let currentDay = `${date.getFullYear()}-${
@@ -422,7 +411,7 @@ class Repository {
         createdBy: 1234,
       },
       _id: key,
-      custId: custId + 1,
+      custId: custId,
       custName: {
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
@@ -454,79 +443,60 @@ class Repository {
         type: "work",
         phone_number: "1234567891",
         extension: "1234",
-      }
+      },
     };
   }
 
   async getNewUserDocument(userInfo) {
-    let userId = await this.getLastUserId();
-    let key = `user_${userId + 1}`;
+    let userId = await this.getNextUserId();
+    if (!userId) {
+      throw "Unable to get next user id.";
+    }
+
+    let key = `user_${userId}`;
 
     return {
       docType: "user",
       _id: key,
-      userId: userId + 1,
+      userId: userId,
       username: userInfo.username,
       password: userInfo.password,
     };
   }
 
-  async getLastOrderId() {
-    let n1qlQuery = `
-      SELECT o.orderId 
-      FROM \`${this.bucketName}\` o 
-      WHERE o.doc.type='order' 
-      ORDER BY o.orderId DESC 
-      LIMIT 1;`;
-
-    let result = await this.cluster.query(n1qlQuery);
-    if(result.rows && result.rows.length > 0){
-      return parseInt(result.rows[0].orderId);
-    }
-    return 0;
+  async getNextCustomerId() {
+    let result = await this.collection
+      .binary()
+      .increment(this.counterIds["customer"], 1, { initial: 1000 });
+    return result && result.value ? result.value : null;
   }
 
-  async getLastCustomerId() {
-    let n1qlQuery = `
-      SELECT c.custId 
-      FROM \`${this.bucketName}\` c 
-      WHERE c.doc.type='customer' 
-      ORDER BY c.custId DESC 
-      LIMIT 1;`;
-
-    let result = await this.cluster.query(n1qlQuery);
-    if(result.rows && result.rows.length > 0){
-      return parseInt(result.rows[0].custId);
-    }
-    return 0;
+  async getNextUserId() {
+    let result = await this.collection
+      .binary()
+      .increment(this.counterIds["user"], 1, { initial: 1000 });
+    return result && result.value ? result.value : null;
   }
 
-  async getLastUserId() {
-    let n1qlQuery = `
-      SELECT u.userId 
-      FROM \`${this.bucketName}\` u 
-      WHERE u.docType='user' 
-      ORDER BY u.userId DESC 
-      LIMIT 1;`;
-
-    let result = await this.cluster.query(n1qlQuery);
-    if(result.rows && result.rows.length > 0){
-      return parseInt(result.rows[0].userId);
-    }
-    return 0;
+  async getNextOrderId() {
+    let result = await this.collection
+      .binary()
+      .increment(this.counterIds["order"], 1, { initial: 5000 });
+    return result && result.value ? result.value : null;
   }
 
-  async getObjectByKey(key){
-    try{
+  async getObjectByKey(key) {
+    try {
       let result = await this.collection.get(key);
       return { result: result.value, error: null };
-    }catch(err){
+    } catch (err) {
       outputMessage(
         err,
-        "repository.js:getLastUserId() - error finding the latest userId."
+        "repository.js:getObjectByKey() - error retrieving document: " + key
       );
       return {
-        result: null, error: err        
+        result: null,
+        error: err,
       };
     }
   }
