@@ -205,9 +205,8 @@ class Repository {
        * Lab 1:  K/V operation - Get
        *  1.  Get customer:  bucket.get(key)
        */
-      let result = await this.collection.get(customerId);
-      return { customer: result ? result.value : null, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:getCustomer() - error:");
       return { session: null, error: err };
@@ -223,29 +222,9 @@ class Repository {
        *        use "basic-search" as index name for searchQuery
        *  2.  K/V getMulti() using FTS results
        *
-       */
-
-      let result = await this.cluster.searchQuery(
-        "basic-search",
-        couchbase.SearchQuery.term(product).fuzziness(fuzziness),
-        {
-          limit: 100,
-        }
-      );
-
-      let docIds = result.rows.map((hit) => hit.id);
-      //uncomment to see doc count
-      // outputMessage(
-      //   docIds.length,
-      //   "repository.js:searchProducts() - total docs:"
-      // );
-      let results = await Promise.all(
-        docIds.map((id) => {
-          return this.collection.get(id);
-        })
-      );
-      return { products: results.map((res) => res.value), error: null };
-    } catch (err) {
+       */      
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:searcProducts() - error:");
       return { products: null, error: err };
@@ -259,9 +238,8 @@ class Repository {
        *  1.  get order:  bucket.get(key)
        *
        */
-      let result = await this.collection.get(orderId);
-      return { order: result.value ? result.value : null, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:getOrder() - error:");
       return { order: null, error: err };
@@ -277,23 +255,8 @@ class Repository {
        *  3.  IF successful insert, GET order
        *
        */
-
-      let orderId = await this.getNextOrderId();
-      let key = `order_${orderId}`;
-
-      order._id = key;
-      order.orderId = orderId;
-      order.doc.created = Math.floor(new Date() / 1000);
-      order.doc.createdBy = order.custId;
-
-      let savedDoc = await this.collection.insert(key, order);
-      if (!savedDoc) {
-        return { order: null, error: null };
-      }
-      let result = await this.collection.get(key);
-
-      return { order: result.value ? result.value : null, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:saveOrder() - error:");
       return { order: null, error: err };
@@ -308,12 +271,8 @@ class Repository {
        *  2.  replace order:  bucket.replace(key, document)
        *
        */
-      let key = `order_${order.orderId}`;
-      order.doc.modified = Math.floor(new Date() / 1000);
-      order.doc.modifiedBy = order.custId;
-      let result = await this.collection.replace(key, order);
-      return { success: result != null, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:replaceOrder() - error:");
       return { success: false, error: err };
@@ -327,9 +286,8 @@ class Repository {
        *  1.  delete order:  bucket.remove(key)
        *
        */
-      let result = await this.collection.remove(orderId);
-      return { success: result != null, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:deleteOrder() - error:");
       return { success: false, error: err };
@@ -351,34 +309,8 @@ class Repository {
        *         orderDate (hint use MILLIS_TO_STR())
        *
        */
-      let n1qlQuery = `
-        SELECT 
-          META(o).id, 
-          o.orderStatus, 
-          o.shippingInfo.name AS shippedTo, 
-          o.grandTotal, 
-          o.lineItems, 
-          MILLIS_TO_STR(o.orderDate) AS orderDate
-        FROM \`${this.bucketName}\` o
-        WHERE o.doc.type = 'order' AND o.custId=$1
-        ORDER BY o.orderDate DESC NULLS FIRST`;
-
-      let options = {
-        parameters: [customerId],
-      };
-
-      //TODO:  prepared queries
-      // if (adhoc) {
-      //   options.adhoc = true;
-      // }
-
-      let qResult = await this.cluster.query(n1qlQuery, options);
-      if (!qResult.rows || qResult.rows.length == 0) {
-        return { orders: null, error: null };
-      }
-
-      return { orders: qResult.rows, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:getOrders() - error:");
       return { orders: null, error: err };
@@ -397,32 +329,8 @@ class Repository {
        *         tax, lineItems, grandTotal, orderId, _id
        *
        */
-      let n1qlQuery = `
-        SELECT o.doc, o.custId, o.orderStatus,
-        o.billingInfo, o.shippingInfo, o.shippingTotal,
-        o.tax, o.lineItems, o.grandTotal, o.orderId, o._id
-        FROM \`${this.bucketName}\` o
-        WHERE o.doc.type = 'order' 
-          AND o.custId=$1 AND o.orderStatus = 'created'
-        ORDER BY o.orderDate DESC NULLS FIRST
-        LIMIT 1;`;
-
-      let options = {
-        parameters: [customerId],
-      };
-
-      //TODO:  prepared queries
-      // if (adhoc) {
-      //   options.adhoc = true;
-      // }
-
-      let qResult = await this.cluster.query(n1qlQuery, options);
-      if (!qResult.rows || qResult.rows.length == 0) {
-        return { orders: [], error: null };
-      }
-
-      return { orders: qResult.rows, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:getNewOrder() - error:");
       return { orders: null, error: err };
@@ -442,29 +350,8 @@ class Repository {
        *
        *  When updating, think about pros/cons to UPSERT v. REPLACE
        */
-      let key = `customer_${custId}`;
-      let results = await this.collection.lookupIn(key, [
-        couchbase.LookupInSpec.exists(path),
-        couchbase.LookupInSpec.get(path),
-      ]);
-
-      if (!results.content[0] || !results.content[1]) {
-        return { success: false, error: null };
-      }
-
-      let addresses = results.content[1].value;
-      let { name, ...newAddress } = address;
-      addresses[name] = newAddress;
-      let modifiedDate = Math.floor(new Date() / 1000);
-
-      this.collection.mutateIn(key, [
-        couchbase.MutateInSpec.upsert(path, addresses),
-        couchbase.MutateInSpec.upsert("doc.modified", modifiedDate),
-        couchbase.MutateInSpec.upsert("doc.modifiedby", custId),
-      ]);
-
-      return { success: true, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:saveAddress() - error:");
       return { success: null, error: err };
@@ -481,22 +368,14 @@ class Repository {
        *
        *  When updating, think about pros/cons to UPSERT v. REPLACE
        */
-      let key = `customer_${custId}`;
-      let modifiedDate = Math.floor(new Date() / 1000);
-
-      this.collection.mutateIn(key, [
-        couchbase.MutateInSpec.upsert(path, address),
-        couchbase.MutateInSpec.upsert("doc.modified", modifiedDate),
-        couchbase.MutateInSpec.upsert("doc.modifiedby", custId),
-      ]);
-
-      return { success: true, error: null };
-    } catch (err) {
+      return "NOP";
+    }catch(err){
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:updateAddress() - error:");
       return { success: false, error: err };
     }
   }
+  
 
   /**
    * Helper methods:
@@ -506,6 +385,8 @@ class Repository {
    *    getNextCustomerId()
    *    getNextUserId()
    */
+
+  
 
   async getNewCustomerDocument(userInfo) {
     let custId = await this.getNextCustomerId();
