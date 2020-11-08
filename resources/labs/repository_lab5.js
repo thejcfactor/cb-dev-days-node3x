@@ -206,7 +206,6 @@ class Repository {
        *  1.  Get customer:  bucket.get(key)
        */
       let result = await this.collection.get(customerId);
-      console.log(result);
       return { customer: result ? result.value : null, error: null };
     } catch (err) {
       //Optional - add business logic to handle error types
@@ -374,7 +373,6 @@ class Repository {
       // }
 
       let qResult = await this.cluster.query(n1qlQuery, options);
-      console.log(qResult.rows);
       if (!qResult.rows || qResult.rows.length == 0) {
         return { orders: null, error: null };
       }
@@ -419,7 +417,6 @@ class Repository {
       // }
 
       let qResult = await this.cluster.query(n1qlQuery, options);
-      console.log(qResult.rows);
       if (!qResult.rows || qResult.rows.length == 0) {
         return { orders: [], error: null };
       }

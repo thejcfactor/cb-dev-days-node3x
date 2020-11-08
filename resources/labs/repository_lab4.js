@@ -206,7 +206,6 @@ class Repository {
        *  1.  Get customer:  bucket.get(key)
        */
       let result = await this.collection.get(customerId);
-      console.log(result);
       return { customer: result ? result.value : null, error: null };
     } catch (err) {
       //Optional - add business logic to handle error types
