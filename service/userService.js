@@ -37,7 +37,11 @@ async function register(userInfo) {
     response.data = acct.result;
     response.message = "Successfully registered customer/user.";
   } else {
-    response.message = "Error registering customer/user.";
+    if(acct.error == "Username already exists."){
+      response.message = "Cannot create user.  Username already exists.";
+    }else{
+      response.message = "Error registering customer/user.";
+    }
     response.error = acct.error;
   }
   return response;

@@ -80,6 +80,12 @@ class Repository {
 
   async createAccount(userInfo) {
     try {
+
+      let existingUser = await this.getUserInfo(userInfo.username)
+      if(existingUser.userInfo != null){
+        return { result: null, error: "Username already exists." };
+      }
+
       let customerDoc = await this.getNewCustomerDocument(userInfo);
 
       let savedCustomer = await this.collection.insert(
@@ -497,6 +503,7 @@ class Repository {
       return { success: false, error: err };
     }
   }
+  
 
   /**
    * Helper methods:
@@ -506,6 +513,8 @@ class Repository {
    *    getNextCustomerId()
    *    getNextUserId()
    */
+
+  
 
   async getNewCustomerDocument(userInfo) {
     let custId = await this.getNextCustomerId();
