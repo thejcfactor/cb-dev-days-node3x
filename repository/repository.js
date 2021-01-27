@@ -64,9 +64,9 @@ class Repository {
 
   async ping() {
     try {
-      let result = await this.getObjectByKey("customer_0");
+      let obj = await this.getObjectByKey("customer_0");
       return {
-        result: result != null ? "Connected to Couchbase server." : null,
+        result: obj.result != null ? "Connected to Couchbase server." : null,
         error: null,
       };
     } catch (err) {

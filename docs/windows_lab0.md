@@ -226,7 +226,7 @@ d-----        11/6/2020   6:55 PM                service
 
 ```
 
-Install the web UI packages by running the following command.
+Install the API packages by running the following command.
 
 ```powershell
 PS C:\Users\Administrator\Documents\cbDevDays\node3x\cb-dev-days-node3x> npm install
@@ -234,7 +234,7 @@ PS C:\Users\Administrator\Documents\cbDevDays\node3x\cb-dev-days-node3x> npm ins
 
 Start the API by running the following command to start the npm development server.  The express server should be listening on port 3000.
 
->**Note:** nodemon is used so that any changes made will be reflected on save without having to manually restart the development server.
+>**Note:** nodemon is used so that any changes made will be reflected on save without having to manually restart the development server.  However, it is possible that nodemon has some problems correctly restarting upon save.  Be sure to check that the server has restarted after making code changes.
 
 ```powershell
 PS C:\Users\Administrator\Documents\cbDevDays\node3x\cb-dev-days-node3x> npm run dev

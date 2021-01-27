@@ -64,17 +64,17 @@ class Repository {
 
   async ping() {
     try {
-      let result = await this.getObjectByKey("customer_0");
+      let obj = await this.getObjectByKey("customer_0");
       return {
-        result: result != null ? "Connected to Couchbase server." : null,
+        result: obj.result != null ? "Connected to Couchbase server." : null,
         error: null,
       };
     } catch (err) {
       outputMessage(
         err,
-        "repository.js:ping() - error trying to retrieve diagnostics."
+        "repository.js:ping() - error:"
       );
-      return { diagnostics: null, error: err };
+      return { result: null, error: err };
     }
   }
 
@@ -216,7 +216,7 @@ class Repository {
     } catch (err) {
       //Optional - add business logic to handle error types
       outputMessage(err, "repository.js:getCustomer() - error:");
-      return { session: null, error: err };
+      return { customer: null, error: err };
     }
   }
 
@@ -262,7 +262,7 @@ class Repository {
     try {
       /**
        * Lab 3:  K/V operation(s):
-       *  1.  get order:  bucket.get(key)
+       *  1.  get order:  collection.get(key)
        *
        */
       let result = await this.collection.get(orderId);
@@ -279,7 +279,7 @@ class Repository {
       /**
        * Lab 3:  K/V operation(s):
        *  1.  generate key:  order_<orderId>
-       *  2.  insert order:  bucket.insert(key, document)
+       *  2.  insert order:  collection.insert(key, document)
        *  3.  IF successful insert, GET order
        *
        */
@@ -311,7 +311,7 @@ class Repository {
       /**
        * Lab 3:  K/V operation(s):
        *  1.  generate key:  order_<orderId>
-       *  2.  replace order:  bucket.replace(key, document)
+       *  2.  replace order:  collection.replace(key, document)
        *
        */
       let key = `order_${order.orderId}`;
@@ -330,7 +330,7 @@ class Repository {
     try {
       /**
        * Lab 3:  K/V operation(s):
-       *  1.  delete order:  bucket.remove(key)
+       *  1.  delete order:  cluster.remove(key)
        *
        */
       let result = await this.collection.remove(orderId);

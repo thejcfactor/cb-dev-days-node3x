@@ -51,7 +51,7 @@ $ cd ~/Documents/cbDevDays/
 *cb-dev-days-web* repository includes all resources needed to run the web UI used in the labs.  Use *git CLI* to clone the repository.
 
 ```console
-$ git clone https://github.com/thejcfactor/cb-dev-days-web.git
+$ git clone https://github.com/couchbaselabs/cb-dev-days-web.git
 ```
 
 Once the repository has been cloned, a *cb-dev-days-web* directory should exist in the current working directory.  Change the working directory to *cb-dev-days-web*.

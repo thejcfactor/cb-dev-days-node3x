@@ -170,7 +170,7 @@ router.get("/getCustomer", verifyToken, getCustomer);
  *     tags:
  *       - User
  *     name: getCustomerOrders
- *     description: Get's the supplied customer's existing orders
+ *     description: Gets the supplied customer's existing orders
  *     security:
  *       - bearerAuth: []
  *     consumes:

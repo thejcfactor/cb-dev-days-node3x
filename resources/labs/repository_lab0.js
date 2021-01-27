@@ -64,17 +64,17 @@ class Repository {
 
   async ping() {
     try {
-      let result = await this.getObjectByKey("customer_0");
+      let obj = await this.getObjectByKey("customer_0");
       return {
-        result: result != null ? "Connected to Couchbase server." : null,
+        result: obj.result != null ? "Connected to Couchbase server." : null,
         error: null,
       };
     } catch (err) {
       outputMessage(
         err,
-        "repository.js:ping() - error trying to retrieve diagnostics."
+        "repository.js:ping() - error:"
       );
-      return { diagnostics: null, error: err };
+      return { result: null, error: err };
     }
   }
 
