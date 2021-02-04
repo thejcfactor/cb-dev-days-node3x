@@ -160,7 +160,7 @@ $ cd node3x
 *cb-dev-days-node3x* repository includes all resources needed to run the Node.js API used in the labs. Use *git CLI* to clone the repository.
 
 ```console
-$ git clone https://github.com/thejcfactor/cb-dev-days-node3x.git
+$ git clone https://github.com/couchbaselabs/cb-dev-days-node3x.git
 ```
 
 Once the repository has been cloned, a *cb-dev-days-node3x* directory should exist in the current working directory.  Change the working directory to *cb-dev-days-node3x*.

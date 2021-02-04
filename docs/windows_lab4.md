@@ -221,6 +221,8 @@ Notes about the code:
 
 Once complete, make sure the *repository.js* file is saved.  Once the code has been saved, the functionality to retrieve a customer’s new/pending order should be active within the web UI.   To verify if the logic is working correctly, after an order has been created (see Lab 3), the cart icon on the top left should be populated with the items from the pending order after a page refresh, if the session is still active, or after logging in.
 
+>**NOTE:**  Using the *getNewOrder()* requires authorization, if wanting to test the logic via the *SwaggerUI* page, follow the authorization steps listed in the [Appendix](#authorize-using-the-swaggerui-page).
+
 >**NOTE:** Until this logic is created, a message saying *“/user/checkForNewOrder operation not built yet.”* appears at the top of various pages as the web UI uses this call to populate the cart page upon a new login or page refresh.
 
 [Back to Steps](#steps)<br> 
