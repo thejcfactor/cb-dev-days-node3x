@@ -29,7 +29,7 @@ This steps below can be used to run a local instance of Couchbase Server.  The i
 cb-dev-days-db repository includes all resources needed to run a local copy of Couchbase Server to use with the labs.  Use git CLI to clone the repository.
 
 ```console
-$ git clone https://github.com/thejcfactor/cb-dev-days-db.git
+$ git clone https://github.com/couchbase/cb-dev-days-db.git
 ```
 
 Once the repository has been cloned, a cb-dev-days-db directory should exist in the current working directory.  Change the working directory to cb-dev-days-db.
@@ -147,7 +147,7 @@ Successfully tagged cbdd-db:latest
 Verify the *Docker* image has been built by using the following *Docker* command. 
 
 ```console
-$ docker image ls --all
+$ docker image ls
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 cbdd-db             latest              890a512f9d17        2 minutes ago       1.2GB
 ```

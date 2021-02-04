@@ -76,9 +76,9 @@ See the following code snippet below for a possible implementation of the *searc
 
 Notes about the code:
 - Uses aysnc/await syntax
-- Lines 11 - 17:  Running a search query with the following parameters.  All search operations are done at the cluster level for 3.x SDKs.
+- Lines 11 - 17:  Running a search query with the following parameters.  Search operations are done at the cluster level for 3.x SDKs.
     + The FTS index to use (this is an index with Couchbase Server)
-    + the type of search query to use
+    + The type of search query to use
     + Limiting the results
 - Line 19:  Get a list of product document Ids based on the search results
 - Lines 25-29:  Using the Promises API to do a bulk get operation to get all the product documents returned from the search

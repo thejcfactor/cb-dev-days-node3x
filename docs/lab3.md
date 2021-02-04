@@ -86,14 +86,14 @@ See the following code snippet below for a possible implementation of the *getOr
 
 Notes about the code:
 - Uses async/await syntax
-- Line 7: All K/V operations are done at the collection level for 3.x SDKs. 
+- Line 7: K/V operations are done at the collection level for 3.x SDKs. 
     + K/V get operation parameters:
         * document key
 - Line 8:  Returning only the value of the result if there is not an error.  The lab(s) only need the document’s content to be returned.
 - *outputMessage()*:  a helper method used to easily print out information to the console, method can be found in the /library directory (see API’s project structure detailed in the [Appendix](#nodejs-api-project-structure))
 - try/catch & err object handling is purposefully done in a generic fashion.  The lab participant is free to add logic accordingly to test out various methods of handling errors.
 
-Once complete, make sure the *repository.js* file is saved.  Since the API *Docker* container maps to the API’s working directory, any updates made to the API code should be reflected in the container.  Once the code has been saved, the functionality to retrieve a specific order can be tested.  Using the *getOrder()* requires authorization, if wanting to test the logic via the SwaggerUI page, follow the authorization steps listed in the [Appendix](#authorize-using-the-swaggerui-page).  Follow the steps below to verify the *getOrder()* logic.
+Once complete, make sure the *repository.js* file is saved.  Since the API *Docker* container maps to the API’s working directory, any updates made to the API code should be reflected in the container.  Once the code has been saved, the functionality to retrieve a specific order can be tested.  Using the *getOrder()* requires authorization, if wanting to test the logic via the SwaggerUI page, follow the authorization steps listed in the [Appendix](#authorize-using-the-swaggerui-page).  Follow the steps below to verify the *getOrder()* logic with the *SwaggerUI* page.
 
 1. Navigate to the *SwaggerUI* page:  http://localhost:3000/api-docs/
 2. Click on the */user/getOrder* endpoint
@@ -179,7 +179,7 @@ Notes about the code:
 - Uses async/await syntax
 - Line 10: utilizing a helper method, getNextOrderId(), to seed the new orderId value
 - Lines 13-16:  Adding document components to the provided order document.
-- Line 18: All K/V operations are done at the collection level for 3.x SDKs. 
+- Line 18: K/V operations are done at the collection level for 3.x SDKs. 
     + K/V insert operation parameters:
         * document key
         * document
@@ -187,7 +187,7 @@ Notes about the code:
 - *outputMessage()*:  a helper method used to easily print out information to the console, method can be found in the /library directory (see API’s project structure detailed in the [Appendix](#nodejs-api-project-structure))
 - try/catch & err object handling is purposefully done in a generic fashion.  The lab participant is free to add logic accordingly to test out various methods of handling errors.
 
-Once complete, make sure the *repository.js* file is saved.  Since the API *Docker* container maps to the API’s working directory, any updates made to the API code should be reflected in the container.  Once the code has been saved, the save order functionality should be active within the web UI.   Follow the steps below to verify the *saveOrder()* logic.
+Once complete, make sure the *repository.js* file is saved.  Since the API *Docker* container maps to the API’s working directory, any updates made to the API code should be reflected in the container.  Once the code has been saved, the save order functionality should be active within the web UI.   Follow the steps below to verify the *saveOrder()* logic with the web UI.
 
 >**NOTE:**  Using the *saveOrder()* requires authorization, if wanting to test the logic via the *SwaggerUI* page, follow the authorization steps listed in the [Appendix](#authorize-using-the-swaggerui-page).
 
@@ -246,7 +246,7 @@ See the following code snippet below for a possible implementation of the *repla
 Notes about the code:
 - Uses async/await syntax
 - Line 8-10: Setting the key for the order document and updating the audit properties
-- Line 11: All K/V operations are done at the collection level for 3.x SDKs. 
+- Line 11: K/V operations are done at the collection level for 3.x SDKs. 
     + K/V replace operation parameters:
         * document key
         * document
@@ -315,7 +315,7 @@ See the following code snippet below for a possible implementation of the *delet
 
 Notes about the code:
 - Uses async/await syntax
-- Line 7: All K/V operations are done at the collection level for 3.x SDKs. 
+- Line 7: K/V operations are done at the collection level for 3.x SDKs. 
     + K/V remove operation parameters:
         * document key
 - Lines 8:  returning boolean based on success of operation or error object if applicable.

@@ -83,14 +83,14 @@ See the following code snippet below for a possible implementation of the *getCu
 
 Notes about the code:
 - uses aysnc/await syntax
-- Line 6:  All K/V operations are done at the collection level for 3.x SDKs.
+- Line 6:  K/V operations are done at the collection level for 3.x SDKs.
   + K/V get operation parameters:
     * document key
 - Line 7:  Returning only the value of the result if there is not an error.  The lab(s) only need the document’s content to be returned.
 - *outputMessage()*:  a helper method used to easily print out information to the console, method can be found in the /library directory (see API’s project structure detailed in the [Appendix](#nodejs-api-project-structure))
 - try/catch & err object handling is purposefully done in a generic fashion.  The lab participant is free to add logic accordingly to test out various methods of handling errors.
 
-Once complete, make sure the *repository.js* file is saved.  Once the code has been saved, the user profile functionality should be active within the web UI.   Follow the steps below (also:  see clip below for walkthrough of steps) in order to see the *User Profile* page.
+Once complete, make sure the *repository.js* file is saved.  Once the code has been saved, the user profile functionality should be active within the web UI.   Follow the steps below (also:  see clip below for walk-through of steps) in order to see the *User Profile* page.
 
 1. Go to http://localhost:8080
 2. In the top right corner, click the *Hello {First Name}* to the user icon, a drop down menu should appear.<br> 

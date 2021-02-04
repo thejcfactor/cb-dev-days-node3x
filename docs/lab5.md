@@ -91,7 +91,7 @@ See the following code snippet below for a possible implementation of the *saveA
 Notes about the code:
 - Uses async/await syntax
 - Line 13:  Creating the document’s key since the key is not passed in, but the custId.
-- Line 14:  All K/V operations are done at the collection level for 3.x SDKs.
+- Line 14:  K/V operations are done at the collection level for 3.x SDKs.
 - Lines 14-17:  Using sub-document lookup-in operation to check if path exists and obtain current customer addresses.
 - Lines 23-26:  Checking if the address path exists, if so, due to the customer document model, need to add a new key to the address sub-document object.  See [Appendix](#sample-customer-document) for sample customer document. 
 - Line 26:  Setting the current date in order to update the parent document audit properties.
@@ -171,7 +171,7 @@ See the following code snippet below for a possible implementation of the *updat
 Notes about the code:
 - Uses async/await syntax
 - Line 10:  Creating the document’s key since the key is not passed in, but the custId.
-- Line 13:  All K/V operations are done at the collection level for 3.x SDKs.
+- Line 13:  K/V operations are done at the collection level for 3.x SDKs.
 - Lines 13-17:  Using sub-document mutate-in operation to update entire address path and update parent document audit properties
 - *outputMessage()*:  a helper method used to easily print out information to the console, method can be found in the /library directory (see API’s project structure detailed in the [Appendix](#nodejs-api-project-structure))
 - try/catch & err object handling is purposefully done in a generic fashion.  The lab participant is free to add logic accordingly to test out various methods of handling errors.
